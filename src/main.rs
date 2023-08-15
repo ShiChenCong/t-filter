@@ -39,15 +39,19 @@ fn restore_terminal(
 }
 
 fn run(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<(), Box<dyn Error>> {
+    let mut current_index = 0;
     Ok(loop {
         terminal
             .draw(|f| {
                 let size = f.size();
-                let items = [
+                let mut items = vec![
                     ListItem::new("Item 1"),
                     ListItem::new("Item 2"),
                     ListItem::new("Item 3"),
                 ];
+                items[current_index] = ListItem::new("Item 4")
+                    .style(Style::default().bg(Color::Cyan).fg(Color::Black));
+
                 f.render_widget(
                     List::new(items)
                         .block(Block::default().title("List").borders(Borders::ALL))
@@ -60,8 +64,17 @@ fn run(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<(), Box<dyn 
             .unwrap();
         if event::poll(Duration::from_millis(250))? {
             if let Event::Key(key) = event::read()? {
-                if KeyCode::Char('q') == key.code {
-                    break;
+                match key.code {
+                    KeyCode::Up => {
+                        current_index -= 1;
+                    }
+                    KeyCode::Down => {
+                        current_index += 1;
+                    }
+                    KeyCode::Char('q') => {
+                        break;
+                    }
+                    _ => {}
                 }
             }
         }
