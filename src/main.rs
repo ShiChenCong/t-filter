@@ -1,3 +1,4 @@
+mod util;
 use crossterm::{
     event::{self, Event, KeyCode},
     execute,
@@ -40,15 +41,16 @@ fn restore_terminal(
 
 fn run(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<(), Box<dyn Error>> {
     let mut current_index = 0;
+
     Ok(loop {
         terminal
             .draw(|f| {
                 let size = f.size();
-                let mut items = vec![
-                    ListItem::new("Item 1"),
-                    ListItem::new("Item 2"),
-                    ListItem::new("Item 3"),
-                ];
+                let mut items = util::history::get_command_history()
+                    .unwrap()
+                    .iter()
+                    .map(|s| ListItem::new(s.clone()))
+                    .collect::<Vec<ListItem>>();
                 items[current_index] = ListItem::new("Item 4")
                     .style(Style::default().bg(Color::Cyan).fg(Color::Black));
 
