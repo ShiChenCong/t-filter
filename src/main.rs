@@ -42,20 +42,22 @@ fn restore_terminal(
 fn run(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<(), Box<dyn Error>> {
     let mut current_index = 0;
 
+    let items = util::history::get_command_history()
+        .unwrap()
+        .iter()
+        .map(|s| ListItem::new(s.clone()))
+        .collect::<Vec<ListItem>>();
     Ok(loop {
         terminal
             .draw(|f| {
                 let size = f.size();
-                let mut items = util::history::get_command_history()
-                    .unwrap()
-                    .iter()
-                    .map(|s| ListItem::new(s.clone()))
-                    .collect::<Vec<ListItem>>();
-                items[current_index] = ListItem::new("Item 4")
+                let mut cloned_items = items.clone();
+                cloned_items[current_index] = cloned_items[current_index]
+                    .clone()
                     .style(Style::default().bg(Color::Cyan).fg(Color::Black));
 
                 f.render_widget(
-                    List::new(items)
+                    List::new(cloned_items)
                         .block(Block::default().title("List").borders(Borders::ALL))
                         .style(Style::default().fg(Color::White))
                         .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
