@@ -7,7 +7,7 @@ use crossterm::{
 use ratatui::{
     backend::CrosstermBackend,
     style::{Color, Modifier, Style},
-    widgets::{Block, Borders, List, ListItem},
+    widgets::{Block, List, ListItem},
     Terminal,
 };
 use std::{
@@ -47,18 +47,22 @@ fn run(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<(), Box<dyn 
         .iter()
         .map(|s| ListItem::new(s.clone()))
         .collect::<Vec<ListItem>>();
+    let page_size: usize = usize::from(terminal.size().unwrap().height) - 2;
+    let mut current_page = 0;
     Ok(loop {
         terminal
             .draw(|f| {
                 let size = f.size();
-                let mut cloned_items = items.clone();
+                let mut cloned_items = items
+                    [current_page * page_size..current_page * page_size + page_size]
+                    .to_vec();
                 cloned_items[current_index] = cloned_items[current_index]
                     .clone()
                     .style(Style::default().bg(Color::Cyan).fg(Color::Black));
 
                 f.render_widget(
                     List::new(cloned_items)
-                        .block(Block::default().title("List").borders(Borders::ALL))
+                        .block(Block::default())
                         .style(Style::default().fg(Color::White))
                         .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
                         .highlight_symbol(">>"),
@@ -74,6 +78,10 @@ fn run(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<(), Box<dyn 
                     }
                     KeyCode::Down => {
                         current_index += 1;
+                        if current_index == page_size {
+                            current_page += 1;
+                            current_index = 0;
+                        }
                     }
                     KeyCode::Char('q') => {
                         break;
