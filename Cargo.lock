@@ -236,6 +236,7 @@ version = "0.1.0"
 dependencies = [
  "crossterm 0.27.0",
  "ratatui",
+ "tui-input",
 ]
 
 [[package]]
@@ -256,6 +257,16 @@ name = "time-core"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7300fbefb4dadc1af235a9cef3737cea692a9d97e1b9cbcd4ebdae6f8868e6fb"
+
+[[package]]
+name = "tui-input"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b3e785f863a3af4c800a2a669d0b64c879b538738e352607e2624d03f868dc01"
+dependencies = [
+ "crossterm 0.27.0",
+ "unicode-width",
+]
 
 [[package]]
 name = "unicode-segmentation"
