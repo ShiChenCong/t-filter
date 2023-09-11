@@ -11,24 +11,17 @@ use ratatui::{
     widgets::{Block, Borders, List, ListItem, Paragraph},
     Terminal,
 };
-use tui_input::backend::crossterm::EventHandler;
-use tui_input::Input;
-enum InputMode {
-    Normal,
-    Editing,
-}
-
 use std::{
     error::Error,
     io::{self, Stdout},
     time::Duration,
 };
+use tui_input::backend::crossterm::EventHandler;
+use tui_input::Input;
 
 struct App {
     /// Current value of the input box
     input: Input,
-    /// Current input mode
-    input_mode: InputMode,
     /// History of recorded messages
     messages: Vec<String>,
 }
@@ -37,7 +30,6 @@ impl Default for App {
     fn default() -> App {
         App {
             input: Input::default(),
-            input_mode: InputMode::Normal,
             messages: Vec::new(),
         }
     }
@@ -106,57 +98,20 @@ fn run(
 
                 let scroll = app.input.visual_scroll(width as usize);
                 let input = Paragraph::new(app.input.value())
-                    .style(match app.input_mode {
-                        InputMode::Normal => Style::default(),
-                        InputMode::Editing => Style::default().fg(Color::Yellow),
-                    })
+                    .style(Style::default().fg(Color::Yellow))
                     .scroll((0, scroll as u16))
                     .block(Block::default().borders(Borders::ALL).title("Input"));
                 f.render_widget(input, chunks[1]);
-                match app.input_mode {
-                    InputMode::Normal =>
-                        // Hide the cursor. `Frame` does this by default, so we don't need to do anything here
-                        {}
-
-                    InputMode::Editing => {
-                        // Make the cursor visible and ask tui-rs to put it at the specified coordinates after rendering
-                        f.set_cursor(
-                            // Put cursor past the end of the input text
-                            chunks[1].x
-                                + ((app.input.visual_cursor()).max(scroll) - scroll) as u16
-                                + 1,
-                            // Move one line down, from the border to the input line
-                            chunks[1].y + 1,
-                        )
-                    }
-                }
+                f.set_cursor(
+                    // Put cursor past the end of the input text
+                    chunks[1].x + ((app.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
+                    // Move one line down, from the border to the input line
+                    chunks[1].y + 1,
+                )
             })
             .unwrap();
         if event::poll(Duration::from_millis(250))? {
             if let Event::Key(key) = event::read()? {
-                match app.input_mode {
-                    InputMode::Normal => match key.code {
-                        KeyCode::Char('e') => {
-                            app.input_mode = InputMode::Editing;
-                        }
-                        KeyCode::Char('q') => {
-                            return Ok(());
-                        }
-                        _ => {}
-                    },
-                    InputMode::Editing => match key.code {
-                        KeyCode::Enter => {
-                            app.messages.push(app.input.value().into());
-                            app.input.reset();
-                        }
-                        KeyCode::Esc => {
-                            app.input_mode = InputMode::Normal;
-                        }
-                        _ => {
-                            app.input.handle_event(&Event::Key(key));
-                        }
-                    },
-                }
                 match key.code {
                     KeyCode::Up => {
                         if current_index == 0 {
@@ -174,17 +129,11 @@ fn run(
                     KeyCode::Char('q') => {
                         break;
                     }
-                    _ => {}
+                    _ => {
+                        app.input.handle_event(&Event::Key(key));
+                    }
                 }
             }
         }
     })
 }
-
-
-,
-
-
-   
-
-    
