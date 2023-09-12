@@ -19,26 +19,10 @@ use std::{
 use tui_input::backend::crossterm::EventHandler;
 use tui_input::Input;
 
-struct App {
-    /// Current value of the input box
-    input: Input,
-    /// History of recorded messages
-    messages: Vec<String>,
-}
-
-impl Default for App {
-    fn default() -> App {
-        App {
-            input: Input::default(),
-            messages: Vec::new(),
-        }
-    }
-}
-
 fn main() -> Result<(), Box<dyn Error>> {
     let mut terminal = setup_terminal()?;
 
-    let app = App::default();
+    let app = Input::default();
     run(&mut terminal, app)?;
 
     restore_terminal(&mut terminal)?;
@@ -62,7 +46,7 @@ fn restore_terminal(
 
 fn run(
     terminal: &mut Terminal<CrosstermBackend<Stdout>>,
-    mut app: App,
+    mut input: Input,
 ) -> Result<(), Box<dyn Error>> {
     let mut current_index = 0;
 
@@ -81,8 +65,9 @@ fn run(
                     .margin(2)
                     .constraints(
                         [
-                            Constraint::Length(1),
+                            // 3行
                             Constraint::Length(3),
+                            // 这区域会占满剩余空间
                             Constraint::Min(1),
                         ]
                         .as_ref(),
@@ -94,19 +79,19 @@ fn run(
                     .clone()
                     .style(Style::default().bg(Color::Cyan).fg(Color::Black));
 
-                let width = chunks[0].width.max(3) - 3; // keep 2 for borders and 1 for cursor
-
-                let scroll = app.input.visual_scroll(width as usize);
-                let input = Paragraph::new(app.input.value())
+                f.render_widget(Paragraph::new(input.value())
                     .style(Style::default().fg(Color::Yellow))
-                    .scroll((0, scroll as u16))
-                    .block(Block::default().borders(Borders::ALL).title("Input"));
-                f.render_widget(input, chunks[1]);
+                    .block(Block::default().borders(Borders::ALL)), chunks[0]);
+                f.render_widget(List::new(cloned_items)
+                        .block(Block::default())
+                        .style(Style::default().fg(Color::White))
+                        .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
+                        .highlight_symbol(">>"),chunks[1]);
                 f.set_cursor(
                     // Put cursor past the end of the input text
-                    chunks[1].x + ((app.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
+                    chunks[0].x + ((input.visual_cursor())) as u16 + 1,
                     // Move one line down, from the border to the input line
-                    chunks[1].y + 1,
+                    chunks[0].y + 1,
                 )
             })
             .unwrap();
@@ -126,11 +111,11 @@ fn run(
                             current_index = 0;
                         }
                     }
-                    KeyCode::Char('q') => {
+                    KeyCode::Esc => {
                         break;
                     }
                     _ => {
-                        app.input.handle_event(&Event::Key(key));
+                        input.handle_event(&Event::Key(key));
                     }
                 }
             }
