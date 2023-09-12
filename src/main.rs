@@ -50,19 +50,15 @@ fn run(
 ) -> Result<(), Box<dyn Error>> {
     let mut current_index = 0;
 
-    let items = util::history::get_command_history()
-        .unwrap()
-        .iter()
-        .map(|s| ListItem::new(s.clone()))
-        .collect::<Vec<ListItem>>();
-    let page_size: usize = usize::from(terminal.size().unwrap().height) - 2;
+    let items = util::history::get_command_history().unwrap();
+    // 这里的3就是下面的3行
+    let page_size: usize = usize::from(terminal.size().unwrap().height) - 3;
     let mut current_page = 0;
     Ok(loop {
         terminal
             .draw(|f| {
                 let chunks = Layout::default()
                     .direction(Direction::Vertical)
-                    .margin(2)
                     .constraints(
                         [
                             // 3行
@@ -73,26 +69,44 @@ fn run(
                         .as_ref(),
                     )
                     .split(f.size());
-                let mut cloned_items =
-                    items[current_page * page_size..current_page * page_size + page_size].to_vec();
-                cloned_items[current_index] = cloned_items[current_index]
+
+                f.render_widget(
+                    Paragraph::new(input.value())
+                        .style(Style::default().fg(Color::Yellow))
+                        .block(Block::default().borders(Borders::ALL)),
+                    chunks[0],
+                );
+
+                f.set_cursor(
+                    // Put cursor past the end of the input text
+                    chunks[0].x + (input.visual_cursor()) as u16 + 1,
+                    // Move one line down, from the border to the input line
+                    chunks[0].y + 1,
+                );
+
+                // 如果input.value有值，则只显示筛选过的item
+                let value = input.value();
+                let contained_value_items: Vec<&String> =
+                    items.iter().filter(|item| item.contains(value)).collect();
+                let filtered_items = contained_value_items
+                    .iter()
+                    .map(|s| ListItem::new(s.to_string()))
+                    .collect::<Vec<ListItem>>();
+                let mut sliced_items = filtered_items
+                    [current_page * page_size..current_page * page_size + page_size]
+                    .to_vec();
+                sliced_items[current_index] = sliced_items[current_index]
                     .clone()
                     .style(Style::default().bg(Color::Cyan).fg(Color::Black));
 
-                f.render_widget(Paragraph::new(input.value())
-                    .style(Style::default().fg(Color::Yellow))
-                    .block(Block::default().borders(Borders::ALL)), chunks[0]);
-                f.render_widget(List::new(cloned_items)
+                f.render_widget(
+                    List::new(sliced_items)
                         .block(Block::default())
                         .style(Style::default().fg(Color::White))
                         .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
-                        .highlight_symbol(">>"),chunks[1]);
-                f.set_cursor(
-                    // Put cursor past the end of the input text
-                    chunks[0].x + ((input.visual_cursor())) as u16 + 1,
-                    // Move one line down, from the border to the input line
-                    chunks[0].y + 1,
-                )
+                        .highlight_symbol(">>"),
+                    chunks[1],
+                );
             })
             .unwrap();
         if event::poll(Duration::from_millis(250))? {
@@ -100,6 +114,8 @@ fn run(
                 match key.code {
                     KeyCode::Up => {
                         if current_index == 0 {
+                            current_page -= 1;
+                            current_index = page_size - 1;
                         } else {
                             current_index -= 1;
                         }
