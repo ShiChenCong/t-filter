@@ -88,13 +88,19 @@ fn run(
                 let value = input.value();
                 let contained_value_items: Vec<&String> =
                     items.iter().filter(|item| item.contains(value)).collect();
+                // 创建ListItem
                 let filtered_items = contained_value_items
                     .iter()
                     .map(|s| ListItem::new(s.to_string()))
                     .collect::<Vec<ListItem>>();
-                let mut sliced_items = filtered_items
-                    [current_page * page_size..current_page * page_size + page_size]
-                    .to_vec();
+                // 只显示当前页的item
+                let end_index = if filtered_items.len() < page_size {
+                    filtered_items.len() - 1
+                } else {
+                    current_page * page_size + page_size
+                };
+                let mut sliced_items = filtered_items[current_page * page_size..end_index].to_vec();
+                // 改变当前选中的item的背景色
                 sliced_items[current_index] = sliced_items[current_index]
                     .clone()
                     .style(Style::default().bg(Color::Cyan).fg(Color::Black));
@@ -114,8 +120,10 @@ fn run(
                 match key.code {
                     KeyCode::Up => {
                         if current_index == 0 {
-                            current_page -= 1;
-                            current_index = page_size - 1;
+                            if current_page != 0 {
+                                current_page -= 1;
+                                current_index = page_size - 1;
+                            }
                         } else {
                             current_index -= 1;
                         }
