@@ -23,9 +23,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut terminal = setup_terminal()?;
 
     let app = Input::default();
-    run(&mut terminal, app)?;
+    let res = run(&mut terminal, app).unwrap();
 
     restore_terminal(&mut terminal)?;
+    println!("{}", res);
     Ok(())
 }
 
@@ -47,14 +48,15 @@ fn restore_terminal(
 fn run(
     terminal: &mut Terminal<CrosstermBackend<Stdout>>,
     mut input: Input,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<String, Box<dyn Error>> {
     let mut current_index = 0;
 
     let items = util::history::get_command_history().unwrap();
     // 这里的3就是下面的3行
     let page_size: usize = usize::from(terminal.size().unwrap().height) - 3;
     let mut current_page = 0;
-    Ok(loop {
+    let res;
+    loop {
         terminal
             .draw(|f| {
                 let chunks = Layout::default()
@@ -136,13 +138,15 @@ fn run(
                         }
                     }
                     KeyCode::Esc => {
+                        res = input.value().to_string();
                         break;
                     }
                     _ => {
                         input.handle_event(&Event::Key(key));
                     }
                 }
-            }
-        }
-    })
+            };
+        };
+    }
+    Ok(res)
 }
