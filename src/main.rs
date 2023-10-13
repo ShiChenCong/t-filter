@@ -96,16 +96,20 @@ fn run(
                     .map(|s| ListItem::new(s.to_string()))
                     .collect::<Vec<ListItem>>();
                 // 只显示当前页的item
-                let end_index = if filtered_items.len() < page_size {
+                let end_index = if filtered_items.len() == 0 {
+                    0
+                } else if filtered_items.len() < page_size {
                     filtered_items.len() - 1
                 } else {
                     current_page * page_size + page_size
                 };
                 let mut sliced_items = filtered_items[current_page * page_size..end_index].to_vec();
                 // 改变当前选中的item的背景色
-                sliced_items[current_index] = sliced_items[current_index]
-                    .clone()
-                    .style(Style::default().bg(Color::Cyan).fg(Color::Black));
+                if sliced_items.len() > 0 {
+                    sliced_items[current_index] = sliced_items[current_index]
+                        .clone()
+                        .style(Style::default().bg(Color::Cyan).fg(Color::Black));
+                }
 
                 f.render_widget(
                     List::new(sliced_items)
@@ -136,6 +140,10 @@ fn run(
                             current_page += 1;
                             current_index = 0;
                         }
+                    }
+                    KeyCode::Enter => {
+                        res = input.value().to_string();
+                        break;
                     }
                     KeyCode::Esc => {
                         res = input.value().to_string();
