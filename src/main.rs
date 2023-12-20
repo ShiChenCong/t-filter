@@ -50,6 +50,7 @@ fn run(
     mut input: Input,
 ) -> Result<String, Box<dyn Error>> {
     let mut current_index = 0;
+    let mut current_string = "".to_owned();
 
     let items = util::history::get_command_history().unwrap();
     // 这里的3就是下面的3行
@@ -106,6 +107,8 @@ fn run(
                 let mut sliced_items = filtered_items[current_page * page_size..end_index].to_vec();
                 // 改变当前选中的item的背景色
                 if sliced_items.len() > 0 {
+                    current_string =
+                        contained_value_items[current_page * page_size + current_index].to_owned();
                     sliced_items[current_index] = sliced_items[current_index]
                         .clone()
                         .style(Style::default().bg(Color::Cyan).fg(Color::Black));
@@ -142,11 +145,11 @@ fn run(
                         }
                     }
                     KeyCode::Enter => {
-                        res = input.value().to_string();
+                        res = current_string;
                         break;
                     }
                     KeyCode::Esc => {
-                        res = input.value().to_string();
+                        res = current_string;
                         break;
                     }
                     _ => {
