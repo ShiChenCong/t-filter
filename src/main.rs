@@ -57,6 +57,7 @@ fn run(
     let page_size: usize = usize::from(terminal.size().unwrap().height) - 3;
     let mut current_page = 0;
     let res;
+    let mut pre_value = String::new();
     loop {
         terminal
             .draw(|f| {
@@ -89,6 +90,10 @@ fn run(
 
                 // 如果input.value有值，则只显示筛选过的item
                 let value = input.value();
+                if value != pre_value.as_str() {
+                    pre_value = value.to_string();
+                    current_page = 0;
+                }
                 let contained_value_items: Vec<&String> =
                     items.iter().filter(|item| item.contains(value)).collect();
                 // 创建ListItem
