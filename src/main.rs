@@ -51,7 +51,6 @@ fn run(
     let mut current_string = "".to_owned();
 
     let items = util::history::get_command_history().unwrap();
-    exit(1);
     // 这里的3就是下面的3行
     let page_size: usize = usize::from(terminal.size().unwrap().height) - 3;
     let mut current_page = 0;
