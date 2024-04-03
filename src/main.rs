@@ -1,4 +1,5 @@
 mod util;
+use clipboard_rs::{Clipboard, ClipboardContext};
 use crossterm::{
     event::{self, Event, KeyCode},
     execute,
@@ -12,7 +13,9 @@ use ratatui::{
     Terminal,
 };
 use std::{
-    error::Error, io::{self, Stdout}, process::exit, time::Duration
+    error::Error,
+    io::{self, Stdout},
+    time::Duration,
 };
 use tui_input::backend::crossterm::EventHandler;
 use tui_input::Input;
@@ -24,7 +27,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     let res = run(&mut terminal, app).unwrap();
 
     restore_terminal(&mut terminal)?;
-    println!("{}", res);
+    let ctx = ClipboardContext::new().unwrap();
+    ctx.set_text(res).unwrap();
+    println!("已复制到粘贴板");
     Ok(())
 }
 
