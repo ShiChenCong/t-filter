@@ -1,7 +1,7 @@
 mod util;
 use clipboard_rs::{Clipboard, ClipboardContext};
 use crossterm::{
-    event::{self, Event, KeyCode},
+    event::{self, Event, KeyCode, KeyModifiers},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -135,6 +135,23 @@ fn run(
         if event::poll(Duration::from_millis(250))? {
             if let Event::Key(key) = event::read()? {
                 match key.code {
+                    KeyCode::Char('n') if key.modifiers == KeyModifiers::CONTROL => {
+                        current_index += 1;
+                        if current_index == page_size {
+                            current_page += 1;
+                            current_index = 0;
+                        }
+                    }
+                    KeyCode::Char('p') if key.modifiers == KeyModifiers::CONTROL => {
+                        if current_index == 0 {
+                            if current_page != 0 {
+                                current_page -= 1;
+                                current_index = page_size - 1;
+                            }
+                        } else {
+                            current_index -= 1;
+                        }
+                    }
                     KeyCode::Up => {
                         if current_index == 0 {
                             if current_page != 0 {

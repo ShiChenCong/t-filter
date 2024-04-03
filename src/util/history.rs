@@ -1,12 +1,6 @@
-use std::{
-    env,
-    error::Error,
-    fs,
-    path::{Path, PathBuf},
-    process::{self, exit, Command, Stdio},
-};
+use std::{env, fs, process::Command};
 
-use home::{cargo_home_with_cwd, home_dir};
+use home::home_dir;
 
 //  ~/.bash_history bash
 //  ~/.zsh_history  zsh
