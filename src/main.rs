@@ -16,7 +16,6 @@ use ratatui::{
 use std::{
     error::Error,
     io::{self, Stdout},
-    os::unix::process,
     process::Command,
     str::FromStr,
     time::Duration,
@@ -186,7 +185,6 @@ fn run(
                             let rest_element: Vec<&str> = current_string[first_space_index..]
                                 .split_whitespace()
                                 .collect();
-                            println!("{:?}", rest_element);
                             let execute_res =
                                 Command::new(first_element).args(rest_element).output();
                             match execute_res {

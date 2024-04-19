@@ -53,18 +53,15 @@ pub fn get_command_history() -> Result<Vec<String>, Box<dyn std::error::Error>> 
             match home_dir() {
                 Some(path) => {
                     // let total_path: PathBuf = [path.display(), "zsh_history"].iter().collect();
-                    let mut a = path.clone();
-                    a.push(".zsh_history");
-                    let file_reader = fs::read(a)?;
+                    let mut home_dir = path.clone();
+                    home_dir.push(".zsh_history");
+                    let file_reader = fs::read(home_dir)?;
                     let result = String::from_utf8_lossy(&file_reader);
                     let content: Vec<String> = result
                         .split("\n")
                         .collect::<Vec<&str>>()
                         .iter()
-                        .map(|&s| {
-                            let a = s.split(";").last().unwrap();
-                            a.to_string()
-                        })
+                        .map(|&s| s.split(";").last().unwrap().to_string())
                         .rev()
                         .collect();
                     Ok(content)
