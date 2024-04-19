@@ -9,13 +9,16 @@ use ratatui::{
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
+    text::{Line, Span},
     widgets::{Block, Borders, List, ListItem, Paragraph},
     Terminal,
 };
 use std::{
     error::Error,
     io::{self, Stdout},
+    os::unix::process,
     process::Command,
+    str::FromStr,
     time::Duration,
 };
 use tui_input::backend::crossterm::EventHandler;
@@ -78,7 +81,7 @@ fn run(
 
                 f.render_widget(
                     Paragraph::new(input.value())
-                        .style(Style::default().fg(Color::Yellow))
+                        .style(Style::default().fg(Color::from_str("#19747E").unwrap()))
                         .block(Block::default().borders(Borders::ALL)),
                     chunks[0],
                 );
@@ -101,7 +104,12 @@ fn run(
                 // 创建ListItem
                 let filtered_items = contained_value_items
                     .iter()
-                    .map(|s| ListItem::new(s.to_string()))
+                    .map(|s| {
+                        ListItem::new(Line::from(Span::styled(
+                            format!(" {}", s.to_string()),
+                            Style::default(),
+                        )))
+                    })
                     .collect::<Vec<ListItem>>();
                 // 只显示当前页的item
                 let end_index = if filtered_items.len() == 0 {
@@ -178,6 +186,7 @@ fn run(
                             let rest_element: Vec<&str> = current_string[first_space_index..]
                                 .split_whitespace()
                                 .collect();
+                            println!("{:?}", rest_element);
                             let execute_res =
                                 Command::new(first_element).args(rest_element).output();
                             match execute_res {
