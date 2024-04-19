@@ -15,6 +15,7 @@ use ratatui::{
 use std::{
     error::Error,
     io::{self, Stdout},
+    process::Command,
     time::Duration,
 };
 use tui_input::backend::crossterm::EventHandler;
@@ -28,8 +29,12 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     restore_terminal(&mut terminal)?;
     let ctx = ClipboardContext::new().unwrap();
-    ctx.set_text(res).unwrap();
-    println!("已复制到粘贴板");
+    if !res.is_empty() {
+        ctx.set_text(res).unwrap();
+        println!("已复制到粘贴板");
+    } else {
+        println!("执行完毕")
+    }
     Ok(())
 }
 
@@ -59,7 +64,7 @@ fn run(
     // 这里的3就是下面的3行
     let page_size: usize = usize::from(terminal.size().unwrap().height) - 3;
     let mut current_page = 0;
-    let res;
+    let mut res = String::from("");
     let mut pre_value = String::new();
     loop {
         terminal
@@ -170,8 +175,24 @@ fn run(
                         }
                     }
                     KeyCode::Enter => {
-                        res = current_string;
-                        break;
+                        if key.modifiers == KeyModifiers::ALT {
+                            //  执行
+                            let first_space_index = current_string
+                                .find(" ")
+                                .unwrap_or_else(|| current_string.len());
+                            let first_element = current_string[..first_space_index].to_string();
+                            let rest_element: Vec<&str> = current_string[first_space_index..]
+                                .split_whitespace()
+                                .collect();
+                            Command::new(first_element)
+                                .args(rest_element)
+                                .output()
+                                .expect("failed to execute git process");
+                            break;
+                        } else {
+                            res = current_string;
+                            break;
+                        }
                     }
                     KeyCode::Esc => {
                         res = current_string;
