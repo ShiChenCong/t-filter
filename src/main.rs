@@ -28,13 +28,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let res = run(&mut terminal, app).unwrap();
 
     restore_terminal(&mut terminal)?;
-    let ctx = ClipboardContext::new().unwrap();
-    if !res.is_empty() {
-        ctx.set_text(res).unwrap();
-        println!("已复制到粘贴板");
-    } else {
-        println!("执行完毕")
-    }
+    println!("{}", res);
     Ok(())
 }
 
@@ -176,7 +170,7 @@ fn run(
                     }
                     KeyCode::Enter => {
                         if key.modifiers == KeyModifiers::ALT {
-                            //  执行
+                            //  执行当前选中的字符
                             let first_space_index = current_string
                                 .find(" ")
                                 .unwrap_or_else(|| current_string.len());
@@ -184,18 +178,26 @@ fn run(
                             let rest_element: Vec<&str> = current_string[first_space_index..]
                                 .split_whitespace()
                                 .collect();
-                            Command::new(first_element)
-                                .args(rest_element)
-                                .output()
-                                .expect("failed to execute git process");
-                            break;
+                            let execute_res =
+                                Command::new(first_element).args(rest_element).output();
+                            match execute_res {
+                                Ok(_) => {
+                                    res = String::from("执行成功");
+                                    break;
+                                }
+                                _ => {
+                                    res = String::from("执行失败");
+                                    break;
+                                }
+                            }
                         } else {
-                            res = current_string;
+                            res = String::from("已复制到粘贴板");
+                            let ctx = ClipboardContext::new().unwrap();
+                            ctx.set_text(current_string).unwrap();
                             break;
                         }
                     }
                     KeyCode::Esc => {
-                        res = current_string;
                         break;
                     }
                     _ => {

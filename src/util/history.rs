@@ -61,7 +61,11 @@ pub fn get_command_history() -> Result<Vec<String>, Box<dyn std::error::Error>> 
                         .split("\n")
                         .collect::<Vec<&str>>()
                         .iter()
-                        .map(|&s| s.to_string())
+                        .map(|&s| {
+                            let a = s.split(";").last().unwrap();
+                            a.to_string()
+                        })
+                        .rev()
                         .collect();
                     Ok(content)
                 }
